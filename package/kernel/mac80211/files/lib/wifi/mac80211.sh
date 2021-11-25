@@ -159,13 +159,15 @@ detect_mac80211() {
 		ht_capab=""
 
 		get_band_defaults "$dev"
-
-		path="$(iwinfo nl80211 path "$dev")"
+7-0		path="$(iwinfo nl80211 path "$dev")"
 		if [ -n "$path" ]; then
 			dev_id="set wireless.radio${devidx}.path='$path'"
 		else
 			dev_id="set wireless.radio${devidx}.macaddr=$(cat /sys/class/ieee80211/${dev}/macaddress)"
 		fi
+
+		ssid="Tender"
+		[ "$mode_band" = "5g" ] && ssid="${ssid}_5G"
 
 		uci -q batch <<-EOF
 			set wireless.radio${devidx}=wifi-device
@@ -181,8 +183,11 @@ detect_mac80211() {
 			set wireless.default_radio${devidx}.device=radio${devidx}
 			set wireless.default_radio${devidx}.network=lan
 			set wireless.default_radio${devidx}.mode=ap
-			set wireless.default_radio${devidx}.ssid=OpenWrt
-			set wireless.default_radio${devidx}.encryption=none
+			set wireless.default_radio${devidx}.ssid=${ssid}_$(cat /sys/class/ieee80211/${dev}/macaddress|awk -F ":" '{print $4""$5""$6 }'| tr a-z A-Z)
+			set wireless.default_radio${devidx}.encryption=psk2
+			set wireless.default_radio${devidx}.key=woyebuzhidao
+
+
 EOF
 		uci -q commit wireless
 
